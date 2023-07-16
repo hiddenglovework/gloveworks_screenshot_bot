@@ -16,7 +16,7 @@ build:
 ifdef TAG
 	docker build -t $(TAG) .
 else
-	docker build .
+	docker build -t gw-discord-ss-bot .
 endif
 
 .PHONY: up down restart build
