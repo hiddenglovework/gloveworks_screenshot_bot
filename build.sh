@@ -5,5 +5,5 @@ IMAGE_TAG="$1"
 if [[ $# -eq 1 ]] ; then
     docker build -t "$IMAGE_TAG" .
 else
-    docker build .
+    docker build -t "gw-discord-ss-bot" .
 fi
