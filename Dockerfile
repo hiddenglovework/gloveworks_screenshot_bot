@@ -1,12 +1,12 @@
 FROM seleniarm/standalone-chromium:114.0
 
-#Install additional packages that does not come pre-installed with seleniarm/standalone-chromium
+# Install additional packages if needed
 RUN set -eux \
   && sudo apt-get update \
   && sudo apt-get install -y \
-    python3-pip=23.1.2+dfsg-2 \
-    python3-discord=2.3.0+dfsg-1 \
-    python3-selenium=4.10.0+dfsg-1 \ 
+    python3-pip \
+    python3-discord \
+    python3-selenium \ 
   && sudo apt-get clean
 
 RUN set -eux \
