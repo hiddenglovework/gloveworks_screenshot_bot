@@ -18,5 +18,3 @@ RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 COPY discord_screenshot_bot.py /usr/local/sbin/gw-discord-ss-bot
 
 CMD ["python3", "/usr/local/sbin/gw-discord-ss-bot"]
-
-# CMD ["sleep","3600"]
