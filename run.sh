@@ -107,11 +107,11 @@ if [[ "$BUILD" = true ]]; then
     docker build -t "$IMAGE" .
 fi
 
-MSYS_NO_PATHCONV=1 docker run -d --rm \
+docker run -d --rm \
     -p 4444:4444 \
     -p 5900 \
     -p 7900:7900 \
-    -v "//$PWD":"//$PWD" -w "//$PWD" --shm-size 2g \
+    -v "$PWD":"$PWD" -w "$PWD" --shm-size 2g \
     -e DISCORD_TOKEN="$TOKEN" -e CHANNEL_ID="$ID" \
     "$IMAGE" "$CONTAINER_NAME"
 
