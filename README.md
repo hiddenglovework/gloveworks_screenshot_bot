@@ -60,18 +60,33 @@ Congratulations you just created and invited your own discord bot!
 
 ---
 
-## How to build the docker image from scratch (you don't have to do this if you just want to use the program)
+## How to run on your PC
+
+You can run the python script directly on your PC. Note that you will need to have `chromium` and `chromium-chromedriver` installed and added to the PATH.
+
+```bash
+python3 discord_screenshot_bot.py [-c|--config] <config-file>
 ```
-./build.bash <insert_new_docker_image_name>
-```
+
+> NOTE: If you already added the discord bot token and channel ID as environment variables, you don't need to specify the config file. It will default to use the environment variables.
 
 ---
 
-## How to start the docker image
+## How to run in a Docker container
+
+### Build the image
+
+- You can build the image directly with the `run.sh` file but passing the `-b|--build` flag. Use `./run.sh --help` for more information on the image name:
+
+```bash
+./run.sh -c <config-file> [-b|--build]
+```
+
+> NOTE: Because of the way flags are parsed, the -b flag needs to be at the end. This is due to the fact that the parser is looking for a flag-value pair
 
 ### With config file
 
-1. Create a config file (e.g. `.config`) with the following format and flags:
+- Create a config file (e.g. `.config`) with the following format and flags:
 
 ```
 TOKEN = "<bot_token>"
@@ -82,7 +97,7 @@ CONTAINER_NAME = "<container_name>" # "gw-discord-ss-bot"
 
 > NOTE: Make sure to include the space around the `=` and wrap all values in double quotes (the config parsing is very basic)
 
-2. Run the run.sh:
+- Run the run.sh:
 
 ```bash
 ./run.sh [-c | --config] <config_file_path>
@@ -111,11 +126,16 @@ docker stop <docker_container_name>
 ---
 
 ## How to test the discord bot:
-```
-#in the discord channel where the bot is active type this message:
+
+```bash
+# in the discord channel where the bot is active type this message:
 @<insert_bot_name> !screenshot <insert_url>
 ```
 
+---
+
 ## Help (Feature Requests/Bug fixes)
+
 ### Troubleshoot: modify the run.sh script to not run the docker container as "-d" detach mode but instead "--it" interactive mode and replace gw-discord-ss-bot with /bin/bash
+
 ### Contact Hidden through gloveworks and forward me any logs. I will do my best to troubleshoot it
