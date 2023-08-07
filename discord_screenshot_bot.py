@@ -4,6 +4,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from pytz import utc
+from argparse import ArgumentParser
+from PIL import Image, ImageDraw
 import asyncio
 import datetime
 import discord
@@ -11,7 +13,19 @@ import os
 import re
 import uuid
 
-# Utils functions
+# # Utils functions
+
+def parse_config(filename, sep="="):
+    config_dict = {}
+    try:
+        with open(filename, 'r') as file:
+            for line in file:
+                key, value = line.strip().translate({ord(i): None for i in '" '}).split(sep)
+                config_dict[key] = value
+    except:
+        config_dict = {}
+    return config_dict
+
 def get_token():
     tok = os.environ.get("DISCORD_TOKEN")
     if not tok:
@@ -19,15 +33,25 @@ def get_token():
     return tok
 
 def get_channel_id():
-    try:
-        return int(os.environ.get("CHANNEL_ID", 692925474032320542))
-    except ValueError:
-        print("Invalid lobby id provided. Defaulting to hardcoded value...")
-        return 692925474032320542
+    id = os.environ.get("CHANNEL_ID")
+    if not id:
+        raise Exception("Channel ID not found")
+    return int(id)
+
+def define_globals():
+    parser = ArgumentParser(description="Run selenium bot to capture screenshot from a website")
+    parser.add_argument("-c", "--config", help="Parse environment variables from a config file", default="")
+    args = parser.parse_args()
+    
+    config = parse_config(args.config)
+
+    discord_token = config.get("DISCORD_TOKEN") or get_token()
+    channel_id = int(config.get("CHANNEL_ID") or get_channel_id())
+
+    return discord_token, channel_id
 
 # Global Variables
-token = get_token()
-channel_id = get_channel_id()
+token, channel_id = define_globals()
 global_here = "here"
 default_input_msg = "!screenshot https://stats.mygloveworks.com/players/csgo"
 client = discord.Client(intents=discord.Intents.default())
@@ -53,11 +77,32 @@ async def on_message(message):
         print(f"[{datetime.datetime.now()}] [Server: {message.guild.name}][#{message.channel}][{message.author}]:'{message.content}'")
         await grab_screenshot(message.content, message.author.id, message.channel)
 
+# Function to crop image to fit top 10
+def crop_image(image_file, dimensions, with_border=True):
+    image = Image.open(image_file)
+    cropped_image = image.crop(dimensions)
+
+    if with_border:
+        _, height = cropped_image.size
+        thickness = 1
+        left_border = 0
+        right_border = 35
+        top_border = 0
+        down_border = height - 2
+
+        draw = ImageDraw.Draw(cropped_image)
+        border_color = (255, 0, 0)
+        draw.rectangle([left_border, top_border, right_border, down_border], outline=border_color, width=thickness)
+
+    cropped_image.save(image_file)
+
 # Main logic to take a screenshot of a website
 async def grab_screenshot(message, author_id, channel):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.binary_location = "/usr/bin/chromium"
 
     urls = re.search('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message)
 
@@ -80,9 +125,12 @@ async def grab_screenshot(message, author_id, channel):
         await channel.send(f"<@{author_id}> Here's Your Screenshot Of: {urls.group()}")
 
     driver.get_screenshot_as_file(file_name)
+    driver.quit()
+
+    crop_image(file_name, (110, 400, 1840, 775)) # dimensions are (left, up, right, down)
+
     await channel.send(file=discord.File(file_name))
     os.remove(file_name)
-    driver.quit()
 
 if __name__ == "__main__":
     print(f"[{datetime.datetime.now()}] Booting Up Discord Bot...")

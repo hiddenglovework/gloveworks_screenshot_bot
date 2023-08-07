@@ -1,7 +1,11 @@
 default: build
 
 up:
-	./run.sh
+ifdef BUILD
+	./run.sh -c .config -b
+else
+	./run.sh -c .config
+endif
 
 stop:
 ifdef CONTAINER_NAME
@@ -12,11 +16,4 @@ endif
 
 restart: stop up
 
-build:
-ifdef TAG
-	docker build -t $(TAG) .
-else
-	docker build -t gw-discord-ss-bot .
-endif
-
-.PHONY: up down restart build
+.PHONY: up down restart

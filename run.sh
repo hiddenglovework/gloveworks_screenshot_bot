@@ -4,10 +4,12 @@ TOKEN=""
 ID=""
 IMAGE="gw-discord-ss-bot"
 CONTAINER_NAME="gw-discord-ss-bot"
+BUILD=false
 
 usage() {
     echo "Usage: ./run.sh -t <discord-token> [-id <channel-id>] [-img <docker-image>] [-c <config-file>]"
     echo "Options:"
+    echo "  -b, --build                   Specify whether to also build the image"
     echo "  -t, --token <discord-token>   Specify the Discord token.             (Required if config flags is not passed)"
     echo "  -id, --id <id>                Specify the Discord channel ID.        (Optional)"
     echo "  -img, --image <id>            Specify the Docker image.              (Optional)"
@@ -22,10 +24,10 @@ parse_config() {
         key=$(echo "$key" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
         value=$(echo "$value" | sed 's/^ *//; s/ *$//; s/"//g')
         case $key in
-            token)
+            discord_token)
                 TOKEN="$value"
                 ;;
-            id)
+            channel_id)
                 ID="$value"
                 ;;
             image)
@@ -46,6 +48,11 @@ parse_flags() {
     while [[ $# -gt 0 ]]; do
         key="$1"
         case $key in
+            -b|--build)
+                BUILD=true
+                shift
+                shift
+                ;;
             -t|--token)
                 TOKEN="$2"
                 shift
@@ -95,13 +102,16 @@ if [[ -z "$TOKEN" ]]; then
     exit 1
 fi
 
-echo "$TOKEN $ID $IMAGE $CONTAINER_NAME"
+if [[ "$BUILD" = true ]]; then
+    echo "Building the image..."
+    docker build -t "$IMAGE" .
+fi
 
-docker run -d --rm \
+MSYS_NO_PATHCONV=1 docker run -d --rm \
     -p 4444:4444 \
     -p 5900 \
     -p 7900:7900 \
-    -v $PWD:$PWD -w $PWD --shm-size 2g \
+    -v "//$PWD":"//$PWD" -w "//$PWD" --shm-size 2g \
     -e DISCORD_TOKEN="$TOKEN" -e CHANNEL_ID="$ID" \
     "$IMAGE" "$CONTAINER_NAME"
 
